@@ -6,9 +6,6 @@ void scan_directory(char *dirname, bool aflag) {
 
   dirp = opendir(dirname);
 
-  if (dirp == NULL) {
-    printf("failed to read %s\n", dirname);
-  }
   // READ FROM THE REQUIRED DIRECTORY IF WE CAN READ IT, UNTIL WE REACH ITS END
   while (dirp != NULL && (dp = readdir(dirp)) != NULL) {
     char *dirpath = realpath(dirname, NULL);
@@ -62,7 +59,7 @@ bool hashtable_find(HASHTABLE *hashtable, FILEINFO *fileinfo) {
 }
 
 // PRINTS ALL NON-NULL INDEXES OF THE HASHTABLE
-void hashtable_print(HASHTABLE *ht) {
+void hashtable_print() {
   printf("------------------------HASHTABLE-------------------------\n");
   for (int i = 0; i < HASHTABLE_SIZE; i++) {
     if (ht[i] != NULL) {

@@ -57,7 +57,6 @@ int main(int argc, char *argv[]) {
     // CHECK ALL FILES
     case 'a':
       aflag = !aflag;
-      printf("-a list all files\n");
       break;
 
       // REPORT ADVANCED ATTEMPT
@@ -142,14 +141,23 @@ int main(int argc, char *argv[]) {
 #endif
   // nduplicates = count_duplicates(ht);
 
-  // EXIT QUIETLY BY ONLY PROVIDING EXIT STATUS (SUCCESS IF NO DUPLICATES)
-  if (qflag) {
-    exit(count_duplicates() == 0 ? EXIT_SUCCESS : EXIT_FAILURE);
-  }
+#if defined(ADVANCED)
 
-  if (lflag) {
-    print_duplicates();
+  if (mflag) {
+    minimize_duplicates();
+    ht = hashtable_new();
+    for (int a = 0; a < argc; ++a) {
+      // ENSURE THAT WE CAN ACCESS EACH REQUESTED DIRECTORY
+      if (stat(argv[a], &statinfo) != 0 || !S_ISDIR(statinfo.st_mode)) {
+        perror(argv[a]);
+        exit(EXIT_FAILURE);
+      }
+      scan_directory(argv[a], aflag);
+    }
+    hashtable_print();
   }
+#endif
+  // EXIT QUIETLY BY ONLY PROVIDING EXIT STATUS (SUCCESS IF NO DUPLICATES)
 
   if (fflag) {
     char *sha2 = strSHA2(fflag);
@@ -165,6 +173,14 @@ int main(int argc, char *argv[]) {
   } else if (hflag) {
     print_matching_sha(hflag);
     free(hflag);
+  }
+
+  if (qflag) {
+    exit(count_duplicates() == 0 ? EXIT_SUCCESS : EXIT_FAILURE);
+  }
+
+  else if (lflag) {
+    print_duplicates();
   }
 
   // NO ARGUMENTS INPUTTED, PRINT DEFAULT STATISTICS

@@ -25,14 +25,22 @@ LIST *inode_find(LIST *list, char *filepath) {
 
 // DETERMINE IF A FILE WITH A MATCHING SHA2 HASH IS ALREADY STORED IN THE LIST
 LIST *sha_find(LIST *list, char *filepath) {
+  list_print(list);
+  printf("sha2 filepath: %s\n", filepath);
   if (list != NULL) {
     while (list != NULL) {
       strSHA2(list->fileinfo[0]->absolute_filepaths[0]);
 
       if (list->count > 0 && list->fileinfo[0]->filecount > 0) {
+        printf("list->count: %i\n", list->count);
+        printf("filecount: %i\n", list->fileinfo[0]->filecount);
         char *sha1 = strSHA2(filepath);
+        printf("sha1 %s\n", sha1);
         char *sha2 = strSHA2(list->fileinfo[0]->absolute_filepaths[0]);
+        printf("sha2 %s\n", sha2);
         if (strcmp(sha1, sha2) == 0) {
+          printf("strcmp == 0\n");
+          list_print(list);
           return list;
         }
       }
@@ -183,3 +191,5 @@ void list_print(LIST *list) {
     printf("list was null\n");
   }
 }
+
+void print_single_list(LIST *list) {}

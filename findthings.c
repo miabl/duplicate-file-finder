@@ -8,19 +8,21 @@ typedef struct _stats_found {
 } STATS_FOUND;
 
 void print_duplicates() {
-  int counter = 0;
+  // hashtable_print();
   for (int i = 0; i < HASHTABLE_SIZE; i++) {
     LIST *current_list = ht[i];
 
     if (current_list != NULL) {
       while (current_list != NULL) {
+#if defined(ADVANCED)
+        if (current_list->count > 1) {
+#else
         if ((current_list->count > 1) ||
             (current_list->fileinfo[0]->filecount > 1)) {
-          int cnt = current_list->count;
-          for (int j = 0; j < cnt; j++) {
+#endif
+          for (int j = 0; j < current_list->count; j++) {
             for (int k = 0; k < current_list->fileinfo[j]->filecount; k++) {
               printf("%s\t", current_list->fileinfo[j]->relative_filepaths[k]);
-              counter++;
             }
           }
           printf("\n");
@@ -29,7 +31,6 @@ void print_duplicates() {
       }
     }
   }
-  printf("counter: %i\n", counter);
 }
 
 int count_duplicates() {
@@ -61,15 +62,17 @@ void find_stats() {
 
     if (list != NULL) {
       while (list != NULL) {
+        // list_print(list);
         stats.unique_files++;
         stats.unique_filesize += list->fileinfo[0]->filesize;
         for (int j = 0; j < list->count; j++) {
-          stats.total_files += list->fileinfo[j]->filecount;
 #if defined(ADVANCED)
           stats.total_filesize += list->fileinfo[j]->filesize;
+          stats.total_files += 1;
 #else
           stats.total_filesize +=
               list->fileinfo[j]->filesize * list->fileinfo[j]->filecount;
+          stats.total_files += list->fileinfo[j]->filecount;
 #endif
         }
         list = list->next;
