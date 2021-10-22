@@ -1,0 +1,91 @@
+* KILL 1. find a project partner.
+
+* DONE 2. determine what activities are to be performed by the program. Determine what data needs to be stored during the execution of the program. Design one of more data types and data structures to store this long-term data, and create a new duplicates.h header file to define these constructs.
+
+** Activities performed by the program
+1. search directories (recursively) for files
+2. add the names/sizes of found files to the hashtable
+3. perform the requested operations on the hashtable based on the arguments provided
+
+
+*** Flag Explanations
+- a :: include hidden/config files
+- A :: indicates if program attempts the /advanced/ version
+- f filename :: find and list, one per line, the relative pathnames of all files whos SHA2 hash matches that of the indicated file
+- h hash :: find and list, one per line, the relative pathnames of all files with the indicated SHA2 hash
+- l :: duplicates lists all duplicate files found
+- m :: (advanced) minimizes the total number of bytes required to store all file's daya by modifying the directory structure being considiered
+- q :: execute quietly, exiting with EXIT_SUCCESS if there are no duplicates, or EXIT_FAILURE otherwise
+
+*** Possible Operations
+
+*** Considerations
+- the advanced project must support duplicate detection in and below two or more directories
+  + the filepath will be different
+- the size of hard-linked files is counted only once
+  + hard links independently connect to the same data on the disk but do not depend on each other (e.g. not a shortcut which just contains text of the actual file name)
+
+** Data Structures
+Information on the directory contents will be stored in a hashtable
+- key :: file hash
+- index :: unsigned 32-bit integer based on file size (?)
+
+- the data of the hashtable will another hashtable containing ::
+  - key :: inode
+  - content ::
+    + size
+    + filepath
+    + filename
+    + hardlink count
+
+
+* DONE 3. break up the activities into fairly independent sets. Write a number of "empty" C files, each of which includes your duplicates.h header file, to implement the activities. Ensure that your file implementing the main() function is named duplicates.c.
+
+- duplicates.c :: main func
+- directories.c ::
+  + =int process_directory(filename, aflag)=
+    returns the number of duplicates as an int (if aflag then include hidden directories)
+
+- files.c ::
+  + =add_to_list(FILE *fp)= adds information about the specified file to the hashtable
+  +
+
+- findthings.c  ::
+  + =int find_by_sha2(sha2, fflag)=
+    returns the number of duplicates found with the same SHA2 hash
+  + =find_by_filename(filename, fflag)=
+    returns the number of duplicates matching the filename
+  + =find_duplicates()=
+    print all duplicate files to stdout
+  + =find_stats()=
+    returns default output to stdout (# files, size, # unique, size unique)
+
+- strSHA2.c :: (given)
+  + =extern char *strSHA2(char *filename)=
+    returns 32bit SHA2 hash for the specified file
+
+- minimize.c ::
+  exentsion for later
+
+
+* DONE 4. write a Makefile to compile and link your C files, each of which will be dependent on the header file.
+
+* DONE 5. write the main() function, whose initial task is simply to receive and validate the command-line options and arguments. Write a usage() function to report the program's synopsis, should command-line processing detect any errors.
+
+* DONE 6. ensure that the "real" command-line argument is the name of a directory that you can read.
+
+* DONE 7. open and read each directory, locating all regular files in the directory. At this stage (as a debugging aid) just print each filename as it is found. When directories are located within directories, you should process those directories recursively.
+
+* DONE 8. add support for the -a command-line option when finding files.
+
+* DONE 9. store the name (location) and size of each file found in each directory.
+
+* DONE 10. having finished reading the directories, identify all duplicate files.
+
+* DONE 11. if the -q command-line option is provided, perform its role and terminate.
+
+* DONE 12. if no command-line options are provided, print out the required "statistics" about the files found and terminate.
+
+* TODO 13. if the -l command-line option is provided, perform its role and terminate.
+
+* TODO 14. armed with a fully tested program, and overflowing with confidence, consider of the advanced tasks (described below).
