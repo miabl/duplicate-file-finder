@@ -1,6 +1,6 @@
 #include "duplicates.h"
 
-void scan_directory(char *dirname, bool aflag, HASHTABLE *ht) {
+void scan_directory(char *dirname, bool aflag) {
   DIR *dirp;
   struct dirent *dp;
 
@@ -26,9 +26,9 @@ void scan_directory(char *dirname, bool aflag, HASHTABLE *ht) {
       if (!S_ISLNK(stat_info.st_mode)) {
         // IF THE FILE IS A DIRECTORY, RECURSIVELY CALL scan_directory()
         if (S_ISDIR(stat_info.st_mode)) {
-          scan_directory(pathname, aflag, ht);
+          scan_directory(pathname, aflag);
         } else {
-          hashtable_add(ht, pathname, filepath, stat_info.st_size);
+          hashtable_add(pathname, filepath, stat_info.st_size);
           // hashtable_print(ht);
         }
       }
@@ -37,13 +37,6 @@ void scan_directory(char *dirname, bool aflag, HASHTABLE *ht) {
 
   // CLOSE THE DIRECTORY
   closedir(dirp);
-}
-
-HASHTABLE *process_directory(char *dirname, bool aflag) {
-  HASHTABLE *ht = hashtable_new();
-  scan_directory(dirname, aflag, ht);
-  // hashtable_print(ht);
-  return ht;
 }
 
 // ALLOCATES MEMORY FOR A NEW (INITIALLY EMPTY) HASHTABLE
@@ -56,10 +49,9 @@ HASHTABLE *hashtable_new(void) {
 }
 
 // ADD A NEW FILE TO A GIVEN HASHTABLE
-void hashtable_add(HASHTABLE *hashtable, char *rel_path, char *abs_path,
-                   off_t filesize) {
+void hashtable_add(char *rel_path, char *abs_path, off_t filesize) {
   uint32_t h = filesize % HASHTABLE_SIZE;
-  hashtable[h] = list_add(hashtable[h], rel_path, abs_path);
+  ht[h] = list_add(ht[h], rel_path, abs_path);
 }
 
 // DETERMINE IF A FILE ALREADY HAS AN ENTRY IN THE GIVEN HASHTABLE

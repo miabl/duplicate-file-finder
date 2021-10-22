@@ -7,6 +7,7 @@
 #define OPTLIST "aAf:h:lq"
 #endif
 
+HASHTABLE *ht;
 // REPORT ERROS WITH COMMAND-LINE OPTIONS TO stderr
 
 void usage(char *progname) {
@@ -32,11 +33,13 @@ void usage(char *progname) {
 }
 
 int main(int argc, char *argv[]) {
+
+  ht = calloc(HASHTABLE_SIZE, sizeof(LIST *));
   char *progname = (progname = strrchr(argv[0], '/')) ? progname + 1 : argv[0];
   // int nduplicates = 0;
 
   bool aflag = false; // all files
-                      //  char *fflag = NULL; // find matching files
+  char *fflag = NULL; // find matching files
   char *hflag = NULL; // find matching files
   bool lflag = false; // list duplicates
   bool qflag = false; // test for duplicates
@@ -59,7 +62,6 @@ int main(int argc, char *argv[]) {
 
       // REPORT ADVANCED ATTEMPT
     case 'A':
-      printf("-A report advanced\n");
 #if defined(ADVANCED)
       exit(EXIT_SUCCESS);
 #else
@@ -67,9 +69,13 @@ int main(int argc, char *argv[]) {
 #endif
       break;
 
+    case 'f':
+      fflag = strdup(optarg);
+      CHECK_ALLOC(fflag);
+      break;
+
       // FIND DUPLICATE FILES WITH THIS PROVIDED HASH
     case 'h':
-      printf("-h compare to hash");
       hflag = strdup(optarg);
       CHECK_ALLOC(hflag);
       break;
@@ -123,6 +129,7 @@ int main(int argc, char *argv[]) {
       perror(argv[a]);
       exit(EXIT_FAILURE);
     }
+    scan_directory(argv[a], aflag);
   }
 #else
   // ENSURE THAT WE CAN ACCESS OUR REQUESTED DIRECTORY
@@ -130,24 +137,39 @@ int main(int argc, char *argv[]) {
     perror(argv[0]);
     exit(EXIT_FAILURE);
   }
+  scan_directory(argv[0], aflag);
+  printf("%s scanned\n", argv[0]);
 #endif
-printf("before processing\n");
-  HASHTABLE *ht = process_directory(argv[0], aflag);
-  printf("processed hashtable\n");
   // nduplicates = count_duplicates(ht);
 
   // EXIT QUIETLY BY ONLY PROVIDING EXIT STATUS (SUCCESS IF NO DUPLICATES)
   if (qflag) {
-    exit(count_duplicates(ht) == 0 ? EXIT_SUCCESS : EXIT_FAILURE);
+    exit(count_duplicates() == 0 ? EXIT_SUCCESS : EXIT_FAILURE);
   }
 
   if (lflag) {
-    print_duplicates(ht);
+    print_duplicates();
+  }
+
+  if (fflag) {
+    char *sha2 = strSHA2(fflag);
+    if (sha2 == NULL) {
+      printf("sha could not be produced for %s\nplease check the filepath is "
+             "correct and the file exists on your system\n",
+             fflag);
+      exit(EXIT_FAILURE);
+    }
+    print_matching_sha(sha2);
+    free(sha2);
+    free(fflag);
+  } else if (hflag) {
+    print_matching_sha(hflag);
+    free(hflag);
   }
 
   // NO ARGUMENTS INPUTTED, PRINT DEFAULT STATISTICS
   else {
-    find_stats(ht);
+    find_stats();
   }
 
   // hashtable_print(ht);
