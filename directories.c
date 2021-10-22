@@ -17,8 +17,9 @@ void scan_directory(char *dirname, bool aflag) {
     char *filepath = realpath(pathname, NULL);
 
     // PROCESS THE REQUIRED FILES DEPENDING ON -a OPTION
-    if ((!aflag && dp->d_name[0] != '.') |
-        (filepath != NULL && (aflag && strcmp(dirpath, filepath) < 0))) {
+    if (filepath != NULL && ((!aflag && dp->d_name[0] != '.') |
+                             (aflag && strcmp(dirpath, filepath) < 0))) {
+
       stat(filepath, &stat_info);
       if (!S_ISLNK(stat_info.st_mode)) {
         // IF THE FILE IS A DIRECTORY, RECURSIVELY CALL scan_directory()
@@ -26,7 +27,6 @@ void scan_directory(char *dirname, bool aflag) {
           scan_directory(pathname, aflag);
         } else {
           hashtable_add(pathname, filepath, stat_info.st_size);
-          // hashtable_print(ht);
         }
       }
     }

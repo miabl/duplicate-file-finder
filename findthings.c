@@ -7,19 +7,15 @@ typedef struct _stats_found {
   uint32_t unique_filesize;
 } STATS_FOUND;
 
+#if defined(ADVANCED)
 void print_duplicates() {
-  // hashtable_print();
   for (int i = 0; i < HASHTABLE_SIZE; i++) {
     LIST *current_list = ht[i];
 
     if (current_list != NULL) {
       while (current_list != NULL) {
-#if defined(ADVANCED)
         if (current_list->count > 1) {
-#else
-        if ((current_list->count > 1) ||
-            (current_list->fileinfo[0]->filecount > 1)) {
-#endif
+          list_print(current_list);
           for (int j = 0; j < current_list->count; j++) {
             for (int k = 0; k < current_list->fileinfo[j]->filecount; k++) {
               printf("%s\t", current_list->fileinfo[j]->relative_filepaths[k]);
@@ -32,6 +28,28 @@ void print_duplicates() {
     }
   }
 }
+#else
+void print_duplicates() {
+  for (int i = 0; i < HASHTABLE_SIZE; i++) {
+    LIST *current_list = ht[i];
+
+    if (current_list != NULL) {
+      while (current_list != NULL) {
+        if ((current_list->count > 1) ||
+            (current_list->fileinfo[0]->filecount > 1)) {
+          for (int j = 0; j < current_list->count; j++) {
+            for (int k = 0; k < current_list->fileinfo[j]->filecount; k++) {
+              printf("%s\t", current_list->fileinfo[j]->relative_filepaths[k]);
+            }
+          }
+          printf("\n");
+        }
+        current_list = current_list->next;
+      }
+    }
+  }
+}
+#endif
 
 int count_duplicates() {
   int counter = 0;

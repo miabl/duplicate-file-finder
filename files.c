@@ -1,5 +1,6 @@
 #include "duplicates.h"
 
+int foundindex;
 // 'CREATE' A NEW, EMPTY LIST - JUST A NULL POINTER
 LIST *list_new(void) { return NULL; }
 
@@ -25,22 +26,14 @@ LIST *inode_find(LIST *list, char *filepath) {
 
 // DETERMINE IF A FILE WITH A MATCHING SHA2 HASH IS ALREADY STORED IN THE LIST
 LIST *sha_find(LIST *list, char *filepath) {
-  list_print(list);
-  printf("sha2 filepath: %s\n", filepath);
   if (list != NULL) {
     while (list != NULL) {
       strSHA2(list->fileinfo[0]->absolute_filepaths[0]);
 
       if (list->count > 0 && list->fileinfo[0]->filecount > 0) {
-        printf("list->count: %i\n", list->count);
-        printf("filecount: %i\n", list->fileinfo[0]->filecount);
         char *sha1 = strSHA2(filepath);
-        printf("sha1 %s\n", sha1);
         char *sha2 = strSHA2(list->fileinfo[0]->absolute_filepaths[0]);
-        printf("sha2 %s\n", sha2);
         if (strcmp(sha1, sha2) == 0) {
-          printf("strcmp == 0\n");
-          list_print(list);
           return list;
         }
       }
@@ -106,27 +99,31 @@ LIST *list_add(LIST *list, char *rel_path, char *abs_path) {
   struct stat statinfo;
   stat(abs_path, &statinfo);
 
+  // IF A MATCHING INODE OR SHA IS FOUND, RETURN THAT LIST
   LIST *found_list = list_find(list, abs_path);
-  if (list != NULL && found_list != NULL) {
+  if (found_list != NULL) {
     for (int i = 0; i < found_list->count; i++) {
       FILEINFO *info = found_list->fileinfo[i];
       if (statinfo.st_ino == info->inode) {
-        info->relative_filepaths = realloc(info->relative_filepaths,
-                                           sizeof(info->relative_filepaths[0]) *
-                                               (info->filecount + 1));
-        info->relative_filepaths[info->filecount] = rel_path;
-        info->absolute_filepaths = realloc(info->absolute_filepaths,
-                                           sizeof(info->absolute_filepaths[0]) *
-                                               (info->filecount + 1));
-        info->absolute_filepaths[info->filecount] = abs_path;
-        info->filecount++;
-        return found_list;
+        found_list->fileinfo[i]->relative_filepaths =
+            realloc(found_list->fileinfo[i]->relative_filepaths,
+                    sizeof(found_list->fileinfo[i]->relative_filepaths[0]) *
+                        (found_list->fileinfo[i]->filecount + 1));
+        found_list->fileinfo[i]->relative_filepaths[found_list->fileinfo[i]->filecount] = rel_path;
+        found_list->fileinfo[i]->absolute_filepaths =
+            realloc(found_list->fileinfo[i]->absolute_filepaths,
+                    sizeof(found_list->fileinfo[i]->absolute_filepaths[0]) *
+                        (found_list->fileinfo[i]->filecount + 1));
+        found_list->fileinfo[i]->absolute_filepaths[found_list->fileinfo[i]->filecount] = abs_path;
+        found_list->fileinfo[i]->filecount++;
+        return list;
       }
     }
 
     // IF THE INODE ISN'T FOUND, ADD THE FILEINFO STRUCT TO THE FILEINFO ARRAY
-    list->fileinfo =
-        realloc(list->fileinfo, sizeof(list->fileinfo[0]) * (list->count + 1));
+    found_list->fileinfo =
+        realloc(found_list->fileinfo,
+                sizeof(found_list->fileinfo[0]) * (found_list->count + 1));
 
     char **relative_filepaths = calloc(1, sizeof(rel_path));
     char **absolute_filepaths = calloc(1, sizeof(abs_path));
@@ -142,8 +139,8 @@ LIST *list_add(LIST *list, char *rel_path, char *abs_path) {
     newfile->absolute_filepaths = absolute_filepaths;
     newfile->filesize = statinfo.st_size;
 
-    list->fileinfo[list->count] = newfile;
-    list->count++;
+    found_list->fileinfo[found_list->count] = newfile;
+    found_list->count++;
 
     return list;
 
@@ -175,7 +172,8 @@ void list_print(LIST *list) {
       for (int i = 0; i < list->count; i++) {
         printf("----------------------fileinfo[%i]---------------\n", i);
         printf("\tfilecount: %i\n", list->fileinfo[i]->filecount);
-        printf("\tinode: %lu\n", list->fileinfo[i]->inode);
+        printf("\tfilesize: %lld\n", list->fileinfo[i]->filesize);
+        printf("\tinode: %llu\n", list->fileinfo[i]->inode);
         printf("\trelative_filepaths:\n");
         for (int j = 0; j < list->fileinfo[i]->filecount; j++) {
           printf("\t\t%s\n", list->fileinfo[i]->absolute_filepaths[j]);

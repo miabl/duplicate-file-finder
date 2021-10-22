@@ -154,7 +154,6 @@ int main(int argc, char *argv[]) {
       }
       scan_directory(argv[a], aflag);
     }
-    hashtable_print();
   }
 #endif
   // EXIT QUIETLY BY ONLY PROVIDING EXIT STATUS (SUCCESS IF NO DUPLICATES)
@@ -187,8 +186,6 @@ int main(int argc, char *argv[]) {
   else {
     find_stats();
   }
-
-  // hashtable_print(ht);
 
   return 0;
 }
