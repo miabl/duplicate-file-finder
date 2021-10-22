@@ -21,6 +21,8 @@ void scan_directory(char *dirname, bool aflag) {
                              (aflag && strcmp(dirpath, filepath) < 0))) {
 
       stat(filepath, &stat_info);
+
+      // CHECK THAT THE FILE IS NOT A SYMBOLIC LINK
       if (!S_ISLNK(stat_info.st_mode)) {
         // IF THE FILE IS A DIRECTORY, RECURSIVELY CALL scan_directory()
         if (S_ISDIR(stat_info.st_mode)) {

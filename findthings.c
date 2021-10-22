@@ -7,50 +7,50 @@ typedef struct _stats_found {
   uint32_t unique_filesize;
 } STATS_FOUND;
 
+
+// PRINT DUPLICATE FILES
+// FOR THE ADVANCED VERSION, ONLY PRINTS ONE FILENAME ASSOCIATED WITH EACH INODE
 #if defined(ADVANCED)
 void print_duplicates() {
+  hashtable_print();
   for (int i = 0; i < HASHTABLE_SIZE; i++) {
-    LIST *current_list = ht[i];
+    LIST *list = ht[i];
 
-    if (current_list != NULL) {
-      while (current_list != NULL) {
-        if (current_list->count > 1) {
-          list_print(current_list);
-          for (int j = 0; j < current_list->count; j++) {
-            for (int k = 0; k < current_list->fileinfo[j]->filecount; k++) {
-              printf("%s\t", current_list->fileinfo[j]->relative_filepaths[k]);
-            }
+      while (list != NULL) {
+
+        // THERE ARE ONLY NON-HARDLINKED DUPLICATES IF COUNT > 1
+        if (list->count > 1) {
+          for (int j = 0; j < list->count; j++) {
+printf("%s\t", list->fileinfo[j]->relative_filepaths[0]);
           }
           printf("\n");
         }
-        current_list = current_list->next;
+        list = list->next;
       }
-    }
   }
 }
 #else
 void print_duplicates() {
   for (int i = 0; i < HASHTABLE_SIZE; i++) {
-    LIST *current_list = ht[i];
+    LIST *list = ht[i];
 
-    if (current_list != NULL) {
-      while (current_list != NULL) {
-        if ((current_list->count > 1) ||
-            (current_list->fileinfo[0]->filecount > 1)) {
-          for (int j = 0; j < current_list->count; j++) {
-            for (int k = 0; k < current_list->fileinfo[j]->filecount; k++) {
-              printf("%s\t", current_list->fileinfo[j]->relative_filepaths[k]);
+      while (list != NULL) {
+        if ((list->count > 1) ||
+            (list->fileinfo[0]->filecount > 1)) {
+          for (int j = 0; j < list->count; j++) {
+            for (int k = 0; k < list->fileinfo[j]->filecount; k++) {
+              printf("%s\t", list->fileinfo[j]->relative_filepaths[k]);
             }
           }
           printf("\n");
         }
-        current_list = current_list->next;
+        list = list->next;
       }
-    }
   }
 }
 #endif
 
+// COUNTS THE NUMBER OF DUPLICATE FILES ENCOUNTERED
 int count_duplicates() {
   int counter = 0;
   for (int i = 0; i < HASHTABLE_SIZE; i++) {
@@ -72,6 +72,7 @@ int count_duplicates() {
   return counter;
 }
 
+// RETURNS THE NUMBER AND SIZE OF ALL/UNIQUE FILES
 void find_stats() {
   STATS_FOUND stats = {0, 0, 0, 0};
 
@@ -84,6 +85,8 @@ void find_stats() {
         stats.unique_files++;
         stats.unique_filesize += list->fileinfo[0]->filesize;
         for (int j = 0; j < list->count; j++) {
+
+          // FOR THE ADVANCED VERSION, ONLY COUNT ONCE FOR EACH FILEINFO STRUCT IN THE ARRAY
 #if defined(ADVANCED)
           stats.total_filesize += list->fileinfo[j]->filesize;
           stats.total_files += 1;
@@ -101,21 +104,25 @@ void find_stats() {
          stats.unique_files, stats.unique_filesize);
 }
 
+// PRINTS ALL FILES MATCHING THE INPUTTED SHA2 STRING
 void print_matching_sha(char *sha2) {
+  hashtable_print();
   for (int i = 0; i < HASHTABLE_SIZE; i++) {
     LIST *list = ht[i];
-    if (list != NULL) {
       while (list != NULL) {
+        printf("before sha\n");
         char *list_sha2 = strSHA2(list->fileinfo[0]->absolute_filepaths[0]);
         if (strcmp(sha2, list_sha2) == 0) {
           for (int j = 0; j < list->count; j++) {
-            for (int k = 0; k < list->fileinfo[j]->filecount; k++) {
+            for (int k = 0; k < list->fileinfo[k]->filecount; k++) {
+              printf("j = %i, k = %i\n", j, k);
               printf("%s\n", list->fileinfo[j]->relative_filepaths[k]);
+              printf("after print\n");
             }
           }
         }
         list = list->next;
-      }
+        printf("next list\n");
     }
   }
 }

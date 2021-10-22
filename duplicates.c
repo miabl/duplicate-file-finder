@@ -174,13 +174,14 @@ int main(int argc, char *argv[]) {
     free(hflag);
   }
 
-  if (qflag) {
+    else if (lflag) {
+    print_duplicates();
+  }
+
+  else if (qflag) {
     exit(count_duplicates() == 0 ? EXIT_SUCCESS : EXIT_FAILURE);
   }
 
-  else if (lflag) {
-    print_duplicates();
-  }
 
   // NO ARGUMENTS INPUTTED, PRINT DEFAULT STATISTICS
   else {

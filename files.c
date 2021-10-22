@@ -103,8 +103,7 @@ LIST *list_add(LIST *list, char *rel_path, char *abs_path) {
   LIST *found_list = list_find(list, abs_path);
   if (found_list != NULL) {
     for (int i = 0; i < found_list->count; i++) {
-      FILEINFO *info = found_list->fileinfo[i];
-      if (statinfo.st_ino == info->inode) {
+      if (statinfo.st_ino == found_list->fileinfo[i]->inode) {
         found_list->fileinfo[i]->relative_filepaths =
             realloc(found_list->fileinfo[i]->relative_filepaths,
                     sizeof(found_list->fileinfo[i]->relative_filepaths[0]) *
