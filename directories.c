@@ -59,15 +59,3 @@ bool hashtable_find(HASHTABLE *hashtable, FILEINFO *fileinfo) {
 
   return list_find(hashtable[h], fileinfo->absolute_filepaths[0]);
 }
-
-// PRINTS ALL NON-NULL INDEXES OF THE HASHTABLE
-void hashtable_print() {
-  printf("------------------------HASHTABLE-------------------------\n");
-  for (int i = 0; i < HASHTABLE_SIZE; i++) {
-    if (ht[i] != NULL) {
-      printf("ht[%i]:\n", i);
-      list_print(ht[i]);
-    }
-  }
-  printf("----------------------------------------------------------\n");
-}

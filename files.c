@@ -14,31 +14,32 @@ LIST *inode_find(LIST *list, char *filepath) {
   struct stat stat_info;
   stat(filepath, &stat_info);
   while (list != NULL) {
+    // ITERATE THROUGH THE FILEINFO ARRAY
     for (int i = 0; i < list->count; i++) {
+      // RETURN THE LIST IF A MATCHING INODE IS FOUND
       if (list->fileinfo[i]->inode == stat_info.st_ino) {
         return list;
       }
     }
     list = list->next;
   }
+  // RETURN NULL IF NO MATCHING INODE IS FOUND
   return NULL;
 }
 
 // DETERMINE IF A FILE WITH A MATCHING SHA2 HASH IS ALREADY STORED IN THE LIST
 LIST *sha_find(LIST *list, char *filepath) {
-  if (list != NULL) {
-    while (list != NULL) {
-      strSHA2(list->fileinfo[0]->absolute_filepaths[0]);
+  while (list != NULL) {
+    strSHA2(list->fileinfo[0]->absolute_filepaths[0]);
 
-      if (list->count > 0 && list->fileinfo[0]->filecount > 0) {
-        char *sha1 = strSHA2(filepath);
-        char *sha2 = strSHA2(list->fileinfo[0]->absolute_filepaths[0]);
-        if (strcmp(sha1, sha2) == 0) {
-          return list;
-        }
+    if (list->count > 0 && list->fileinfo[0]->filecount > 0) {
+      char *sha1 = strSHA2(filepath);
+      char *sha2 = strSHA2(list->fileinfo[0]->absolute_filepaths[0]);
+      if (strcmp(sha1, sha2) == 0) {
+        return list;
       }
-      list = list->next;
     }
+    list = list->next;
   }
   return NULL;
 }
@@ -88,8 +89,8 @@ LIST *list_new_file(FILEINFO *fileinfo) {
   CHECK_ALLOC(new);
   new->fileinfo = calloc(1, sizeof(fileinfo));
   new->fileinfo[0] = fileinfo;
-  new->count = 1;
   CHECK_ALLOC(new->fileinfo);
+  new->count = 1;
   new->next = NULL;
   return new;
 }
@@ -103,18 +104,34 @@ LIST *list_add(LIST *list, char *rel_path, char *abs_path) {
   LIST *found_list = list_find(list, abs_path);
   if (found_list != NULL) {
     for (int i = 0; i < found_list->count; i++) {
+
+      // IF THE INODE IN THE FOUND LIST MATCHES THE INODE OF THE FILE, ADD THE
+      // FILE TO THAT LIST
       if (statinfo.st_ino == found_list->fileinfo[i]->inode) {
+
+        // ALLOCATE SUFFICENT SPACE IN THE RELATIVE FILEPATH ARRAY
         found_list->fileinfo[i]->relative_filepaths =
             realloc(found_list->fileinfo[i]->relative_filepaths,
                     sizeof(found_list->fileinfo[i]->relative_filepaths[0]) *
                         (found_list->fileinfo[i]->filecount + 1));
-        found_list->fileinfo[i]->relative_filepaths[found_list->fileinfo[i]->filecount] = rel_path;
+
+        // ADD THE NEW RELATIVE FILEPATH TO THE END OF THE ARRAY
+        found_list->fileinfo[i]
+            ->relative_filepaths[found_list->fileinfo[i]->filecount] = rel_path;
+
+        // ALLOCATE SUFFICIENT SPACE IN THE ABSOLUTE FILEPATH ARRAY
         found_list->fileinfo[i]->absolute_filepaths =
             realloc(found_list->fileinfo[i]->absolute_filepaths,
                     sizeof(found_list->fileinfo[i]->absolute_filepaths[0]) *
                         (found_list->fileinfo[i]->filecount + 1));
-        found_list->fileinfo[i]->absolute_filepaths[found_list->fileinfo[i]->filecount] = abs_path;
+
+        // ADD THE NEW ABSOLUTE FILEPATH TO THE ARRAY
+        found_list->fileinfo[i]
+            ->absolute_filepaths[found_list->fileinfo[i]->filecount] = abs_path;
+
+        // INCREMENT THE FILE COUNTER
         found_list->fileinfo[i]->filecount++;
+
         return list;
       }
     }
@@ -124,6 +141,8 @@ LIST *list_add(LIST *list, char *rel_path, char *abs_path) {
         realloc(found_list->fileinfo,
                 sizeof(found_list->fileinfo[0]) * (found_list->count + 1));
 
+    // ALLOCATE SPACE FOR NEW ABSOLUTE AND RELATIVE FILEPATH ARRAYS AND
+    // INITIALIZE THEM WITH THE FILEPATHS
     char **relative_filepaths = calloc(1, sizeof(rel_path));
     char **absolute_filepaths = calloc(1, sizeof(abs_path));
     relative_filepaths[0] = strdup(rel_path);
@@ -138,18 +157,21 @@ LIST *list_add(LIST *list, char *rel_path, char *abs_path) {
     newfile->absolute_filepaths = absolute_filepaths;
     newfile->filesize = statinfo.st_size;
 
+    // ADD THE NEW FILEINFO STRUCT TO THE END OF THE FILEPATH ARRAY & INCREMENT
+    // THE COUNTER
     found_list->fileinfo[found_list->count] = newfile;
     found_list->count++;
 
     return list;
 
   } else {
-    // make struct
+    // IF DUPLICATE FILES DON'T EXIST IN THE LIST, SIMPLY ADD A NEW LIST
     char **relative_filepaths = calloc(1, sizeof(rel_path));
     char **absolute_filepaths = calloc(1, sizeof(abs_path));
     relative_filepaths[0] = strdup(rel_path);
     absolute_filepaths[0] = strdup(abs_path);
 
+    // POPULATE A NEW FILEINFO STRUCT
     FILEINFO *newfile = malloc(sizeof(FILEINFO));
     newfile->inode = statinfo.st_ino;
     newfile->filecount = 1;
@@ -163,30 +185,13 @@ LIST *list_add(LIST *list, char *rel_path, char *abs_path) {
   }
 }
 
-// PRINT EACH INODE & FILEPATH IN A LIST TO stdout
-void list_print(LIST *list) {
+// PRINT THE FILE NAMES STORED IN ONE NODE OF A LIST (A FILEINFO ARRAY)
+void print_file_names(LIST *list) {
   if (list != NULL) {
-    while (list != NULL) {
-      printf("list count: %i\n", list->count);
-      for (int i = 0; i < list->count; i++) {
-        printf("----------------------fileinfo[%i]---------------\n", i);
-        printf("\tfilecount: %i\n", list->fileinfo[i]->filecount);
-        printf("\tfilesize: %lld\n", list->fileinfo[i]->filesize);
-        printf("\tinode: %llu\n", list->fileinfo[i]->inode);
-        printf("\trelative_filepaths:\n");
-        for (int j = 0; j < list->fileinfo[i]->filecount; j++) {
-          printf("\t\t%s\n", list->fileinfo[i]->absolute_filepaths[j]);
-        }
-        printf("\tabsolute_filepaths:\n");
-        for (int j = 0; j < list->fileinfo[i]->filecount; j++) {
-          printf("\t\t%s\n", list->fileinfo[i]->absolute_filepaths[j]);
-        }
+    for (int i = 0; i < list->count; i++) {
+      for (int j = 0; j < list->fileinfo[i]->filecount; j++) {
+        printf("%s\n", list->fileinfo[i]->absolute_filepaths[j]);
       }
-      list = list->next;
     }
-  } else {
-    printf("list was null\n");
   }
 }
-
-void print_single_list(LIST *list) {}
