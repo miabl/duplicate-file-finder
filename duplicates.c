@@ -1,3 +1,7 @@
+//  CITS2002 Project 2 2021 - duplicates
+//  Name(s):             Mia Blessas
+//  Student number(s):   23295523
+
 #include "duplicates.h"
 #include <getopt.h>
 
@@ -22,6 +26,8 @@ void usage(char *progname) {
           "   -a\t\tcheck all files, including those begging with '.'\n");
   fprintf(stderr,
           "   -A\t\treport if this program attempts the advanced features\n");
+  fprintf(stderr, "   -h\t\tlist all files matching the inputted hash\n");
+  fprintf(stderr, "   -f\t\tlist all files matching the inputted filename\n");
   fprintf(stderr, "   -l\t\tlist all duplicates found\n");
 #if defined(ADVANCED)
   fprintf(stderr, "   -m\t\tminimize duplicates by creating hard-links\n");
@@ -174,14 +180,13 @@ int main(int argc, char *argv[]) {
     free(hflag);
   }
 
-    else if (lflag) {
+  else if (lflag) {
     print_duplicates();
   }
 
   else if (qflag) {
     exit(count_duplicates() == 0 ? EXIT_SUCCESS : EXIT_FAILURE);
   }
-
 
   // NO ARGUMENTS INPUTTED, PRINT DEFAULT STATISTICS
   else {
