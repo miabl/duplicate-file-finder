@@ -4,12 +4,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 #include <dirent.h>
 #include <sys/param.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 
+#define ADVANCED
 #if defined(__linux__)
 extern char *strdup(const char *s);
 extern char *realpath(const char *restrict path, char *restrict resolved_path);
@@ -38,15 +40,17 @@ typedef struct _fileinfo {
   off_t filesize;
 } FILEINFO;
 
+// DATATYPE TO STORE AN ARRAY OF FILEINFO STRUCTS
 typedef struct _list {
   int count;
   struct _fileinfo **fileinfo;
   struct _list *next;
 } LIST;
 
+// RETURNS THE SHA2 HASH OF A FILE
 extern char *strSHA2(char *filename);
 
-// THESE FUNCTIONS ARE DECLARED HERE, AND DEFINED IN list.c:
+// THESE FUNCTIONS ARE DECLARED HERE, AND DEFINED IN files.c:
 
 // 'CREATE' A NEW, EMPTY LIST
 extern LIST *list_new(void);
@@ -60,8 +64,13 @@ extern LIST *list_find(LIST *list, char *filepath);
 // PRINT EACH ITEM (A FILEINFO STRUCT) IN A GIVEN LIST TO stdout
 extern void list_print(LIST *list);
 
+extern void print_single_list(LIST *list);
 // WE DEFINE A HASHTABLE AS A (WILL BE, DYNAMICALLY ALLOCATED) ARRAY OF LISTs
 typedef LIST *HASHTABLE;
+
+extern void print_file_names(LIST *list);
+
+extern HASHTABLE *ht;
 
 // THESE FUNCTIONS ARE DECLARED HERE, AND DEFINED IN hashtable.c :
 
@@ -69,23 +78,31 @@ typedef LIST *HASHTABLE;
 extern HASHTABLE *hashtable_new(void);
 
 // PROCESSES THE CONTENTS OF THE SPECIFIED DIRECTORY
-extern HASHTABLE *process_directory(char *dirname, bool aflag);
+extern void scan_directory(char *dirname, bool aflag);
 
 // ADD A NEW LIST TO A GIVEN HASHTABLE
-extern void hashtable_add(HASHTABLE *hashtable, char *rel_path, char *abs_path,
-                          off_t filesize);
+extern void hashtable_add(char *rel_path, char *abs_path, off_t filesize);
 
 // DETERMINE IF A REQUIRED LIST ALREADY EXISTS IN A GIVEN HASHTABLE
 extern bool hashtable_find(HASHTABLE *hashtable, FILEINFO *fileinfo);
 
 // PRINT ALL NON-ZERO INDEXES OF THE SPECIFIED HASHTABLE
-extern void hashtable_print(HASHTABLE *hashtable);
+extern void hashtable_print();
 
 // RETURNS SHA2 HASH OF SPECIFIED FILENAME
 extern char *strSHA2(char *filename);
 
-extern void print_duplicates(HASHTABLE *ht);
+// PRINTS FILENAMES OF DUPLICATE FILES
+extern void print_duplicates(void);
 
-extern int count_duplicates(HASHTABLE *ht);
+// COUNTS THE NUMBER OF DUPLICATE FILES
+extern int count_duplicates(void);
 
-extern void find_stats(HASHTABLE *ht);
+// RETURNS REQUIRED STATS ABOUT THE DIRECTORY
+extern void find_stats(void);
+
+// PRINTS ALL FILES WITH MATCHING SHA2 HASHES
+extern void print_matching_sha(char *sha2);
+
+// ATTEMPTS TO MINIMIZE FILESIZE BY HARD-LINKING DUPLICATES
+extern void minimize_duplicates(void);
